@@ -2,7 +2,9 @@ No Windows:
 
     python -m venv venv
     venv\Scripts\activate
+    
     pip install flask transformers torch pillow
+    
 No macOS/Linux:
 
     python3 -m venv venv
