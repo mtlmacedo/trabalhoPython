@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Detector de IA</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+            margin-top: 50px;
+        }
+        #result {
+            margin-top: 20px;
+        }
+        .bar-container {
+            width: 80%;
+            background-color: #e0e0e0;
+            margin: 10px auto;
+            height: 30px;
+            border-radius: 5px;
+            display: flex;
+            justify-content: space-between;
+            position: relative;
+        }
+        .bar {
+            height: 100%;
+            text-align: center;
+            line-height: 30px;
+            color: white;
+        }
+        .artificial-bar {
+            background-color: #f44336;
+            border-top-left-radius: 5px;
+            border-bottom-left-radius: 5px;
+        }
+        .human-bar {
+            background-color: #4caf50;
+            border-top-right-radius: 5px;
+            border-bottom-right-radius: 5px;
+        }
+        img {
+            max-width: 300px;
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+    <h1>Detector de IA</h1>
+    <form id="uploadForm" enctype="multipart/form-data">
+        <div class="input-container">
+            <input type="file" id="imageInput" name="image" accept="image/*">
+        </div>
+        <p id="fileName"></p>
+        <button type="submit">Enviar</button>
+    </form>
+    <div id="result" style="display:none;">
+        <img id="uploadedImage" src="" alt="Imagem enviada" style="display: block; margin: 20px auto; max-width: 300px;">
+        <br>
+        <div id="label"></div>
+        <div class="bar-container">
+            <div id="artificial-bar" class="bar artificial-bar" style="width: 0;">Artificial</div>
+            <div id="human-bar" class="bar human-bar" style="width: 0;">Humano</div>
+        </div>
+    </div>
+
+    <script>
+        const form = document.getElementById('uploadForm');
+        const resultDiv = document.getElementById('result');
+        const humanBar = document.getElementById('human-bar');
+        const artificialBar = document.getElementById('artificial-bar');
+        const label = document.getElementById('label');
+        const uploadedImage = document.getElementById('uploadedImage');
+        const imageInput = document.getElementById('imageInput');
+        const fileNameDisplay = document.getElementById('fileName');
+        
+        imageInput.addEventListener('change', function () {
+            if (imageInput.files.length > 0) {
+                const fileName = imageInput.files[0].name;
+                fileNameDisplay.textContent = `${fileName}`;
+            } else {
+                fileNameDisplay.textContent = '';
+            }
+        });
+
+        form.addEventListener('submit', async function (event) {
+            event.preventDefault();
+            const formData = new FormData();
+           
+            if (imageInput.files.length > 0) {
+                formData.append('image', imageInput.files[0]);
+                uploadedImage.src = URL.createObjectURL(imageInput.files[0]);
+            } else {
+                alert("Envie uma imagem");
+                return;
+            }
+
+            const response = await fetch('/upload', {
+                method: 'POST',
+                body: formData
+            });
+            
+
+            const data = await response.json();
+            const humanScore = data.find(item => item.label === 'human').score * 100;
+            const artificialScore = data.find(item => item.label === 'artificial').score * 100;
+
+            
+            resultDiv.style.display = 'block';
+            uploadedImage.style.display = 'block';
+            
+            artificialBar.style.width = (artificialScore) + '%';
+            artificialBar.textContent = `Artificial: ${artificialScore.toFixed(2)}%`;
+
+            humanBar.style.width = (humanScore) + '%';            
+            humanBar.textContent = `Humano: ${humanScore.toFixed(2)}%`;
+
+            if (humanScore > artificialScore) {
+                label.textContent = '👦🏽';
+            } else {
+                label.textContent = '🤖';
+            }
+        });
+    </script>
+</body>
+</html>
